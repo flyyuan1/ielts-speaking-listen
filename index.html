@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f6f1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="IELTS Speaking 0918 大陆题库：搜索题目、阅读中英辅助、朗读每道答案。">
+  <title>雅思口语随听练习</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d3d50'/%3E%3Cpath d='M18 17h28v5H18zm0 12h20v5H18zm0 12h28v5H18z' fill='%23f6e2ad'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="返回雅思口语随听练习首页">
+        <span class="brand-mark" aria-hidden="true">SP</span>
+        <span><strong>Speaking Pocket</strong><small>雅思口语随听练习</small></span>
+      </a>
+      <div class="header-note">0918 大陆题库 <span class="header-dot"></span> 10 月 30 日下午考试</div>
+    </header>
+
+    <section class="hero" aria-labelledby="hero-title">
+      <p class="eyebrow">LISTEN · REPEAT · SPEAK</p>
+      <h1 id="hero-title">点开一道题，<br><em>听一遍，再自己说。</em></h1>
+      <p class="hero-copy">P1、P2、P3 的英文答案都能播放。先听清节奏，再遮住答案，按自己的话复述。</p>
+      <div class="hero-stats" aria-label="题库数量">
+        <span><strong>202</strong> Part 1</span>
+        <span><strong>56</strong> Part 2</span>
+        <span><strong>311</strong> Part 3</span>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <section class="library" aria-labelledby="library-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">YOUR LIBRARY</p>
+            <h2 id="library-title">选择练习题</h2>
+          </div>
+          <span id="resultCount" class="result-count" aria-live="polite">载入中</span>
+        </div>
+
+        <div class="filter-tabs" role="group" aria-label="题目范围">
+          <button type="button" class="filter-tab active" data-filter="priority" aria-pressed="true">考前重点</button>
+          <button type="button" class="filter-tab" data-filter="1" aria-pressed="false">P1</button>
+          <button type="button" class="filter-tab" data-filter="2" aria-pressed="false">P2</button>
+          <button type="button" class="filter-tab" data-filter="3" aria-pressed="false">P3</button>
+          <button type="button" class="filter-tab" data-filter="all" aria-pressed="false">全部</button>
+        </div>
+
+        <label class="search-box">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <span class="sr-only">搜索题号、中英文问题或答案</span>
+          <input id="searchInput" type="search" placeholder="搜题号、主题或关键词…" autocomplete="off">
+        </label>
+
+        <div class="day-strip" aria-label="四天考前重点">
+          <span class="day-strip-label">按天练</span>
+          <button type="button" class="day-button" data-day="27">27日</button>
+          <button type="button" class="day-button" data-day="28">28日</button>
+          <button type="button" class="day-button" data-day="29">29日</button>
+          <button type="button" class="day-button" data-day="30">30日上午</button>
+        </div>
+
+        <div id="questionList" class="question-list" aria-label="题目列表"></div>
+        <button id="loadMore" class="load-more" type="button" hidden>再显示 80 题</button>
+      </section>
+
+      <section class="reader" aria-label="当前题目与答案">
+        <div id="readerContent" class="reader-content">
+          <div class="reader-loading">正在整理你的口语题库…</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>按 0918 版大陆题库整理。中文要点用来理解，练习时尽量用自己的英语表达。</p>
+      <p>朗读使用你设备上的英文语音；不同手机和浏览器的声音会有所不同。</p>
+    </footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
