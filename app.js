@@ -19,7 +19,8 @@ const state = {
   items: [], byId: new Map(), filter: 'priority', day: null,
   query: '', visible: 80, selectedId: null, voices: [],
   rate: Number(localStorage.getItem('speaking-rate')) || 0.9,
-  voiceName: localStorage.getItem('speaking-voice') || '',
+  questionVoiceName: localStorage.getItem('speaking-question-voice') || '',
+  answerVoiceName: localStorage.getItem('speaking-answer-voice') ?? localStorage.getItem('speaking-voice') ?? '',
   speechToken: 0, speaking: false, paused: false,
 };
 
@@ -62,7 +63,7 @@ function splitSpeech(text) {
   return text.replace(/\s*\n+\s*/g, ' ').trim().split(/(?<=[.!?])\s+(?=[A-Z])/).filter(Boolean);
 }
 
-function speak(text, label = '答案') {
+function speak(text, kind = 'answer') {
   if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
     showToast('这个浏览器没有提供语音朗读，请用 Chrome、Edge 或 Safari 打开。');
     return;
@@ -71,7 +72,9 @@ function speak(text, label = '答案') {
   stopSpeech();
   const chunks = splitSpeech(text);
   const token = state.speechToken;
-  const voice = state.voices.find(v => v.name === state.voiceName);
+  const label = kind === 'question' ? '题目' : '答案';
+  const voiceName = kind === 'question' ? state.questionVoiceName : state.answerVoiceName;
+  const voice = state.voices.find(v => v.name === voiceName);
   state.speaking = true;
   state.paused = false;
   updatePauseButton();
@@ -105,16 +108,17 @@ function speak(text, label = '答案') {
 function refreshVoices() {
   if (!('speechSynthesis' in window)) return;
   state.voices = window.speechSynthesis.getVoices().filter(v => /^en\b|^en[-_]/i.test(v.lang));
-  const select = document.querySelector('#voiceSelect');
-  if (!select) return;
-  select.replaceChildren();
-  const fallback = new Option('系统默认英语', '');
-  select.add(fallback);
-  state.voices.forEach(v => select.add(new Option(`${v.name} (${v.lang})`, v.name)));
-  if (!state.voiceName && state.voices.length) {
-    state.voiceName = (state.voices.find(v => /^en-GB/i.test(v.lang)) || state.voices[0]).name;
-  }
-  select.value = state.voices.some(v => v.name === state.voiceName) ? state.voiceName : '';
+  [
+    ['#questionVoiceSelect', state.questionVoiceName],
+    ['#answerVoiceSelect', state.answerVoiceName],
+  ].forEach(([selector, selectedName]) => {
+    const select = document.querySelector(selector);
+    if (!select) return;
+    select.replaceChildren();
+    select.add(new Option('系统默认英语', ''));
+    state.voices.forEach(v => select.add(new Option(`${v.name} (${v.lang})`, v.name)));
+    select.value = state.voices.some(v => v.name === selectedName) ? selectedName : '';
+  });
 }
 
 function getCandidates() {
@@ -185,8 +189,11 @@ function renderDetail(item) {
         <option value="0.75">0.75×</option><option value="0.85">0.85×</option><option value="0.9">0.9×</option>
         <option value="1">1.0×</option><option value="1.1">1.1×</option><option value="1.2">1.2×</option>
       </select></label>
-      <label class="audio-select">声音 <select id="voiceSelect" aria-label="选择英文朗读声音"></select></label>
-      <div id="audioStatus" class="audio-status" role="status">点击播放，跟读时可以调慢语速。</div>
+      <div class="voice-settings">
+        <label class="voice-choice">题目声音 <select id="questionVoiceSelect" aria-label="选择题目朗读声音"></select></label>
+        <label class="voice-choice">答案声音 <select id="answerVoiceSelect" aria-label="选择答案朗读声音"></select></label>
+      </div>
+      <div id="audioStatus" class="audio-status" role="status">题目和答案可以分别选声音，语速共用。</div>
     </div>
     <div class="answer-header"><h3>参考答案</h3><div class="answer-tools"><button id="toggleAnswer" class="text-toggle" type="button">遮住英文</button></div></div>
     <div id="answerBody" class="answer-body"></div><div id="extraContent"></div>`;
@@ -238,7 +245,7 @@ function renderDetail(item) {
   els.detail.querySelectorAll('.audio-panel button').forEach(button => { if (button.id !== 'stopButton') button.disabled = !supported; });
   if (!supported) setSpeechStatus('此浏览器没有提供朗读功能。请换用 Chrome、Edge 或 Safari。');
   els.detail.querySelector('#playAnswer').addEventListener('click', () => speak(item.answer));
-  els.detail.querySelector('#playQuestion').addEventListener('click', () => speak(item.question, '题目'));
+  els.detail.querySelector('#playQuestion').addEventListener('click', () => speak(item.question, 'question'));
   els.detail.querySelector('#stopButton').addEventListener('click', stopSpeech);
   els.detail.querySelector('#pauseButton').addEventListener('click', () => {
     if (!state.speaking) return;
@@ -260,10 +267,15 @@ function renderDetail(item) {
     localStorage.setItem('speaking-rate', String(state.rate));
     showToast('语速已设置，下次播放生效。');
   });
-  els.detail.querySelector('#voiceSelect').addEventListener('change', event => {
-    state.voiceName = event.target.value;
-    localStorage.setItem('speaking-voice', state.voiceName);
-    showToast('英文声音已设置，下次播放生效。');
+  els.detail.querySelector('#questionVoiceSelect').addEventListener('change', event => {
+    state.questionVoiceName = event.target.value;
+    localStorage.setItem('speaking-question-voice', state.questionVoiceName);
+    showToast('题目声音已设置，下次播放生效。');
+  });
+  els.detail.querySelector('#answerVoiceSelect').addEventListener('change', event => {
+    state.answerVoiceName = event.target.value;
+    localStorage.setItem('speaking-answer-voice', state.answerVoiceName);
+    showToast('答案声音已设置，下次播放生效。');
   });
   refreshVoices();
   els.detail.querySelector('#toggleAnswer').addEventListener('click', event => {
