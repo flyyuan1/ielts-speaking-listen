@@ -1,9 +1,9 @@
-const PRIORITY = ['P2-R18', 'P2-N15', 'P2-R16', 'P2-R25', 'P2-N10', 'P2-N03', 'P2-N01'];
+const PRIORITY = ['P2-F03', 'P2-F27', 'P2-F28', 'P2-F29', 'P2-F30', 'P2-F34', 'P2-F48', 'P2-F52', 'P2-F02', 'P2-F05', 'P2-F08', 'P2-F14', 'P2-F17', 'P2-F33', 'P2-F39'];
 const DAY_IDS = {
   '27': ['P1-E01-Q01', 'P1-E01-Q02', 'P1-E01-Q03', 'P1-E01-Q04', 'P1-E01-Q05', 'P1-E03-Q01', 'P1-E03-Q03', 'P1-E03-Q05', 'P1-E02-Q05', 'P1-E02-Q14', 'P2-R18', 'P2-N15', 'P3-R18-Q01', 'P3-R18-Q04', 'P3-N15-Q01', 'P3-N15-Q03'],
   '28': ['P2-R18', 'P2-N15', 'P2-R16', 'P2-R25', 'P2-N10', 'P1-R15-Q03', 'P1-N01-Q01', 'P1-N01-Q03', 'P1-R05-Q01', 'P3-R16-Q01', 'P3-R16-Q02', 'P3-N10-Q01', 'P3-N10-Q02', 'P3-R25-Q04'],
-  '29': ['P2-N03', 'P2-N01', 'P2-R18', 'P2-N10', 'P2-N15', 'P2-R16', 'P2-R25', 'P1-E01-Q01', 'P1-E03-Q01', 'P1-E02-Q05', 'P1-R15-Q03', 'P3-N03-Q01', 'P3-N03-Q05', 'P3-N01-Q01', 'P3-N01-Q03'],
-  '30': ['P1-E01-Q01', 'P1-E03-Q01', 'P1-E02-Q05', 'P1-R15-Q03', 'P1-N01-Q01', 'P2-R18', 'P2-N15', 'P2-R16', 'P2-R25', 'P2-N01', 'P3-R18-Q01', 'P3-N15-Q01', 'P3-R16-Q01', 'P3-N01-Q01'],
+  '29': ['P1-F06-Q01', 'P1-F11-Q01', 'P1-F13-Q01', 'P1-F14-Q05', 'P1-F15-Q02', 'P1-F16-Q01', 'P2-F03', 'P2-F27', 'P2-F28', 'P2-F29', 'P2-F30', 'P2-F34', 'P2-F48', 'P2-F52', 'P2-F02', 'P2-F05', 'P2-F08', 'P2-F14', 'P3-F03-Q02', 'P3-F28-Q04', 'P3-F29-Q05', 'P3-F30-Q05'],
+  '30': ['P1-F18-Q01', 'P1-F20-Q03', 'P1-F19-Q02', 'P1-F17-Q01', 'P2-F02', 'P2-F17', 'P2-F33', 'P2-F39', 'P3-F01-Q06', 'P3-F03-Q03', 'P3-F17-Q01', 'P3-F39-Q06'],
 };
 
 const els = {
@@ -203,6 +203,12 @@ function renderDetail(item) {
   els.detail.querySelector('.reader-topic').textContent = item.topic;
   els.detail.querySelector('.reader-question').textContent = item.question;
   els.detail.querySelector('.reader-question-zh').textContent = item.questionZh || '';
+  if (item.warning) {
+    const warning = el('div', 'provenance');
+    warning.append(el('strong', '', '题意提醒：'), document.createTextNode(item.warning));
+    if (item.clarification) warning.append(el('p', '', `可先澄清：${item.clarification}`));
+    els.detail.querySelector('.reader-question-zh').after(warning);
+  }
 
   if (item.part === 2 && item.cueCard?.length) {
     const card = els.detail.querySelector('.cue-card');
@@ -233,6 +239,7 @@ function renderDetail(item) {
   if (item.part === 2 && item.extension) {
     const details = el('details', 'extension');
     details.append(el('summary', '', '可选延伸 · 需要继续说时再用'), el('p', '', item.extension));
+    if (item.extensionZh) details.append(el('p', 'zh-note', item.extensionZh));
     extra.append(details);
   }
   if (item.provenance) {
@@ -315,15 +322,17 @@ function setFilter(filter, day = null) {
 
 async function init() {
   try {
-    const response = await fetch('./data.json');
+    const response = await fetch('./data.json?v=20261029-final');
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     state.items = data.items;
     state.byId = new Map(state.items.map(item => [item.id, item]));
-    if (data.items.length !== 569 || data.counts.p1 !== 202 || data.counts.p2 !== 56 || data.counts.p3 !== 311) {
+    if (data.items.length !== 502 || data.counts.p1 !== 204 || data.counts.p2 !== 53 || data.counts.p3 !== 245) {
       throw new Error('题库条目数量不正确');
     }
-    const hashId = decodeURIComponent(location.hash.slice(1));
+    const originalHashId = decodeURIComponent(location.hash.slice(1));
+    const hashId = data.legacyIdMap?.[originalHashId] || originalHashId;
+    if (originalHashId && !state.byId.has(hashId)) showToast('这个旧题号未直接对应最终版原题，已打开当前练习清单。');
     if (hashId && state.byId.has(hashId)) {
       state.filter = String(state.byId.get(hashId).part);
       setFilter(state.filter);
